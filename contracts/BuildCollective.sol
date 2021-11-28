@@ -24,6 +24,7 @@ contract BuildCollective is Ownable {
     uint256 balance;
     User[] contributors;
     string link;
+    bool registered;
   }
 
   struct Bounty {
@@ -65,29 +66,21 @@ contract BuildCollective is Ownable {
     emit UserSignedUp(msg.sender, users[msg.sender]);
   }
 
-  function addEntreprise(string memory entName, address[] memory membresAddr) public returns (Entreprise memory) {
+  function addEntreprise(string memory entName) public returns (Entreprise memory) {
     entreprises[msg.sender].owner = users[msg.sender];
     entreprises[msg.sender].name = entName;
     entreprises[msg.sender].balance = 0;
     entreprises[msg.sender].registered = true;
-    for (uint256 i = 0; i < membresAddr.length; i++) {
-      entreprises[msg.sender].members.push(users[membresAddr[i]]);
-    }
     emit EntrepriseSignedUp(msg.sender, entreprises[msg.sender]);
   }
 
-  function createProject(string memory projName, address[] memory contributorsAddr, string memory projLink) public returns (Project memory){
+  function createProject(string memory projName, string memory projLink) public returns (Project memory){
     projects[msg.sender].userOwner = users[msg.sender];
     projects[msg.sender].entrepriseOwner = entreprises[msg.sender];
     projects[msg.sender].name = projName;
     projects[msg.sender].balance = 0;
     projects[msg.sender].link = projLink;
-
-    for(uint256 i = 0; i < contributorsAddr.length; i++) {
-      projects[msg.sender].contributors.push(users[contributorsAddr[i]]);
-      isContributor[contributorsAddr[i]] = true;
-    }
-
+    projects[msg.sender].registered = true;
     emit ProjectCreated(msg.sender, projects[msg.sender]);
   }
 
@@ -136,5 +129,16 @@ contract BuildCollective is Ownable {
 
   function getAllUserProjects() public view returns(Project memory) {
     return projects[msg.sender];
+  }
+
+  function addEntrepriseMember(address member) public returns (bool) {
+    require(entreprises[msg.sender].registered, "unregistered entreprise");
+    entreprises[msg.sender].members.push(users[member]);
+    return true;
+  }
+
+  function addProjectContributor(address contributor) public returns(bool) {
+    projects[msg.sender].contributors.push(users[contributor]);
+    return true;
   }
 }
